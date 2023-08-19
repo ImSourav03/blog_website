@@ -1,0 +1,14 @@
+<%- include('partials/header.ejs') %>
+
+<h1> Update Post </h1>
+<form action="/update/<%= postToUpdate.title %>" method="POST">
+  <div class="form-group">
+    <label>Title</label>
+    <input name="updatedTitle" type="text" class="form-control" value="<%= postToUpdate.title %>"> <br>
+    <label>Updated Post</label>
+    <textarea name="updatedContent" rows="5" cols="40" class="form-control"><%= postToUpdate.content %></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+<%- include('partials/footer.ejs') %>

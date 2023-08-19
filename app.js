@@ -2,14 +2,33 @@
 
 const express= require('express');
 const bodyParser= require('body-parser');
+const mongoose = require("mongoose");
 var _ = require('lodash');
 const app = express();
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
-const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
-const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
+
+async function connectToDB() {
+  const password = encodeURIComponent('12@sourav');
+  const dbName = 'blogDb';
+  const clusterName = 'cluster0'; // Replace with your actual cluster name
+  const uri = `mongodb+srv://blog-via-sourav:${password}@${clusterName}.qi42bbr.mongodb.net/${dbName}?retryWrites=true&w=majority`;
+
+  try {
+    await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    console.log("Connected to MongoDB Atlas");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error.message);
+  }
+}
+
+// Call the function to connect to the database
+connectToDB().catch(error => console.error(error));
+
+const homeStartingContent = "(Across the Globe internship) Hello folks Sourav Kumar this side ( This is simple Blog post social media project where you can write your daily blogs).";
+const aboutContent = "I have used REST APIs and mongoDb to create this Blog Social Media Website.";
+const contactContent = "You can check all my personal details in my portfolio website:-https://imsourav03.github.io/souravPortfolio/";
 
 let posts=[];
 
@@ -31,7 +50,6 @@ app.get('/contact',(req,res)=>{
     contactContent: contactContent
   });
 });
-
 
 app.get('/compose', (req, res)=>{
   res.render('compose.ejs');
@@ -59,6 +77,67 @@ app.get('/posts/:postName', function(req,res){
   })
   
 })
+app.get('/posts/:postName', function(req, res) {
+  const testTitle = _.lowerCase(req.params.postName);
+  const post = posts.find((data) => _.lowerCase(data.title) === testTitle);
+
+  if (post) {
+    res.render('post.ejs', {
+      title: post.title, // Ensure that title is set correctly
+      content: post.content
+    });
+  } else {
+    // Handle the case where the post is not found
+    res.status(404).send('Post not found');
+  }
+});
+
+
+
+
+// Delete a specific blog post
+app.post('/delete', (req, res) => {
+  const postTitleToDelete = req.body.postTitle;
+
+  console.log('Post Title to Delete:', postTitleToDelete);
+
+  // Use lodash to find the index of the post to delete based on title
+  const indexToDelete = _.findIndex(posts, (post) => _.lowerCase(post.title) === _.lowerCase(postTitleToDelete));
+
+  console.log('Index to Delete:', indexToDelete);
+
+  if (indexToDelete !== -1) {
+    posts.splice(indexToDelete, 1); // Remove the post at the found index
+    res.redirect('/');
+  } else {
+    res.status(404).send('Post not found'); // Handle the case where the post is not found
+  }
+});
+
+
+
+// Update a specific blog post
+app.get('/update/:postName', (req, res) => {
+  const postNameToUpdate = _.lowerCase(req.params.postName);
+
+  // Find the post in the posts array based on the post name
+  const postToUpdate = _.find(posts, (post) => _.lowerCase(post.title) === postNameToUpdate);
+
+  res.render('update.ejs', { postToUpdate });
+});
+
+app.post('/update/:postName', (req, res) => {
+  const postNameToUpdate = _.lowerCase(req.params.postName);
+
+  // Find the post in the posts array based on the post name
+  const postToUpdate = _.find(posts, (post) => _.lowerCase(post.title) === postNameToUpdate);
+
+  // Update the content of the post
+  postToUpdate.content = req.body.updatedContent;
+
+  res.redirect('/');
+});
+
 
 
 app.listen(3000, function() {

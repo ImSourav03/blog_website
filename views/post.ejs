@@ -1,8 +1,8 @@
 <%- include('partials/header.ejs') %>
-<h1>
-    <%= title %>
-</h1>
-<p>
-    <%= content %>
-</p>
+<h1><%= title %></h1>
+<p><%= content %></p>
+<form action="/delete" method="POST">
+  <input type="hidden" name="postTitle" value="<%= title %>">
+  <button type="submit" class="btn btn-danger">Delete</button>
+</form>
 <%- include("partials/footer.ejs") %>
